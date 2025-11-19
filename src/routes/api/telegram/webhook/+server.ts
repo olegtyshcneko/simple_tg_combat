@@ -20,6 +20,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	if (update?.message) {
+		console.info('Telegram update', {
+			update_id: update.update_id,
+			chat_id: update.message.chat.id,
+			text: update.message.text
+		});
 		try {
 			await handleMessage(update.message);
 		} catch (error) {
@@ -60,8 +65,7 @@ async function handleMessage(message: TelegramMessage) {
 						reply_markup: {
 							inline_keyboard: [
 								[
-									{ text: 'Open profile', web_app: { url } },
-									{ text: 'Open in browser', url }
+									{ text: 'Open profile', web_app: { url } }
 								]
 							]
 						}

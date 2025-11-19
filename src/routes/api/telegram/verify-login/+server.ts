@@ -43,8 +43,15 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const validation = validateTelegramLogin(params);
 	if (!validation.ok || !validation.user) {
-		return json({ ok: false, error: validation.reason ?? 'Failed to validate Telegram login' }, { status: 400 });
+		console.warn('Telegram login verification failed', {
+			reason: validation.reason ?? 'validation_error'
+		});
+		return json(
+			{ ok: false, error: validation.reason ?? 'Failed to validate Telegram login' },
+			{ status: 400 }
+		);
 	}
 
+	console.info('Telegram login verified', { user_id: validation.user.id, username: validation.user.username });
 	return json({ ok: true, user: validation.user });
 };
