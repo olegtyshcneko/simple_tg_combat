@@ -12,7 +12,13 @@
 
 	onMount(async () => {
 		if (user) return;
-		const tg = window.Telegram?.WebApp;
+		const tg = await loadTelegramWebApp();
+		if (!tg) {
+			validationError =
+				'Telegram Web App SDK unavailable. Use the login button below or open from Telegram.';
+			return;
+		}
+
 		const handleAuth = async (payload: TelegramAuthPayload) => {
 			loading = true;
 			try {
@@ -61,6 +67,26 @@
 			throw new Error(json.error ?? 'Unable to verify Telegram login.');
 		}
 		return json.user;
+	}
+
+	let telegramWebAppPromise: Promise<TelegramWebApp | null> | null = null;
+	function loadTelegramWebApp(): Promise<TelegramWebApp | null> {
+		if (window.Telegram?.WebApp) {
+			return Promise.resolve(window.Telegram.WebApp);
+		}
+
+		if (!telegramWebAppPromise) {
+			telegramWebAppPromise = new Promise((resolve, reject) => {
+				const script = document.createElement('script');
+				script.src = 'https://telegram.org/js/telegram-web-app.js';
+				script.async = true;
+				script.onload = () => resolve(window.Telegram?.WebApp ?? null);
+				script.onerror = () => reject(new Error('Failed to load Telegram Web App SDK'));
+				document.head.appendChild(script);
+			});
+		}
+
+		return telegramWebAppPromise;
 	}
 </script>
 
