@@ -2,15 +2,16 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+let { data }: { data: PageData } = $props();
 
-	let user = $state(data.user);
-	let validationError = $state(data.validationError);
-	let loading = $state(false);
+let user = $state(data.user);
+let validationError = $state(data.validationError);
+let loading = $state(false);
+let imageError = $state(false);
 
-	const botUsername = data.botUsername;
+const botUsername = data.botUsername;
 
-	onMount(async () => {
+onMount(async () => {
 		if (user) return;
 		const tg = await loadTelegramWebApp();
 		if (!tg) {
@@ -100,12 +101,18 @@
 		{#if user}
 			<p class="muted">Signature verified. Here is what Telegram shared with us.</p>
 			<div class="profile">
-				{#if user.photo_url}
+				{#if user.photo_url && !imageError}
 					<img
 						src={user.photo_url}
 						alt={`Profile photo for ${user.first_name}`}
 						loading="lazy"
+						referrerpolicy="no-referrer"
+						onerror={() => (imageError = true)}
 					/>
+				{:else}
+					<div class="avatar-fallback">
+						{user.first_name?.[0] ?? '?'}
+					</div>
 				{/if}
 				<div>
 					<p class="name">
@@ -194,6 +201,20 @@
 		border-radius: 16px;
 		object-fit: cover;
 		border: 2px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.avatar-fallback {
+		width: 96px;
+		height: 96px;
+		border-radius: 16px;
+		background: linear-gradient(145deg, #1d2f3c, #0f1820);
+		border: 2px solid rgba(255, 255, 255, 0.08);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.8rem;
+		font-weight: 700;
+		color: #cfe6ff;
 	}
 
 	.name {
