@@ -123,7 +123,10 @@ export function validateTelegramLogin(
 		.map(([key, value]) => `${key}=${value}`)
 		.join('\n');
 
-	const secretKey = crypto.createHash('sha256').update(botToken).digest();
+	const isWebAppData = params.has('query_id'); // query_id is present for WebApp initData
+	const secretKey = isWebAppData
+		? crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
+		: crypto.createHash('sha256').update(botToken).digest();
 	const computedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
 
 	if (computedHash !== hash) {
