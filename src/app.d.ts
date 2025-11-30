@@ -14,6 +14,7 @@ declare global {
 		ready?: () => void;
 		expand?: () => void;
 		requestFullscreen?: () => void;
+		disableVerticalSwipes?: () => void;
 	}
 
 	interface TelegramAPI {

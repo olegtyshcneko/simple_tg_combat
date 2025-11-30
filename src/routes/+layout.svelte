@@ -19,4 +19,8 @@
 		overflow: hidden;
 		background-color: #050607; /* Match the darkest background color */
 	}
+
+	:global(*) {
+		box-sizing: border-box;
+	}
 </style>

@@ -20,6 +20,7 @@
 			return;
 		}
 		tg.requestFullscreen?.();
+		tg.disableVerticalSwipes?.();
 
 		const handleAuth = async (payload: TelegramAuthPayload) => {
 			loading = true;
@@ -177,7 +178,8 @@
 		height: 100%;
 		overflow-y: auto;
 		-webkit-overflow-scrolling: touch;
-		padding: 2rem;
+		overscroll-behavior-y: none;
+		padding: 1rem;
 		box-sizing: border-box;
 		background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
 			#050607;
@@ -260,7 +262,7 @@
 
 	@media (max-width: 640px) {
 		.card {
-			padding: 1.4rem;
+			padding: 1.2rem;
 		}
 
 		.profile {
