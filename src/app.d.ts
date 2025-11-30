@@ -12,6 +12,8 @@ declare global {
 	interface TelegramWebApp {
 		initData?: string;
 		ready?: () => void;
+		expand?: () => void;
+		requestFullscreen?: () => void;
 	}
 
 	interface TelegramAPI {
@@ -34,4 +36,4 @@ declare global {
 	};
 }
 
-export {};
+export { };

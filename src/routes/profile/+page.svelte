@@ -19,6 +19,7 @@ onMount(async () => {
 				'Telegram Web App SDK unavailable. Use the login button below or open from Telegram.';
 			return;
 		}
+		tg.expand?.();
 
 		const handleAuth = async (payload: TelegramAuthPayload) => {
 			loading = true;
