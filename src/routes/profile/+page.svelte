@@ -173,10 +173,12 @@
 
 	.page {
 		display: flex;
-		justify-content: center;
-		align-items: center;
-		min-height: 100vh;
+		flex-direction: column;
+		height: 100%;
+		overflow-y: auto;
+		-webkit-overflow-scrolling: touch;
 		padding: 2rem;
+		box-sizing: border-box;
 		background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
 			#050607;
 		color: #e8f1f5;
@@ -184,6 +186,7 @@
 	}
 
 	.card {
+		margin: auto;
 		background: rgba(12, 16, 20, 0.88);
 		border: 1px solid rgba(255, 255, 255, 0.08);
 		border-radius: 18px;
