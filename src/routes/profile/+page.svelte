@@ -1,25 +1,25 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import type { PageData } from './$types';
+	import { onMount } from "svelte";
+	import type { PageData } from "./$types";
 
-let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 
-let user = $state(data.user);
-let validationError = $state(data.validationError);
-let loading = $state(false);
-let imageError = $state(false);
+	let user = $state(data.user);
+	let validationError = $state(data.validationError);
+	let loading = $state(false);
+	let imageError = $state(false);
 
-const botUsername = data.botUsername;
+	const botUsername = data.botUsername;
 
-onMount(async () => {
+	onMount(async () => {
 		if (user) return;
 		const tg = await loadTelegramWebApp();
 		if (!tg) {
 			validationError =
-				'Telegram Web App SDK unavailable. Use the login button below or open from Telegram.';
+				"Telegram Web App SDK unavailable. Use the login button below or open from Telegram.";
 			return;
 		}
-		tg.expand?.();
+		tg.requestFullscreen?.();
 
 		const handleAuth = async (payload: TelegramAuthPayload) => {
 			loading = true;
@@ -29,7 +29,9 @@ onMount(async () => {
 				validationError = null;
 			} catch (error) {
 				validationError =
-					error instanceof Error ? error.message : 'Failed to reach verification endpoint.';
+					error instanceof Error
+						? error.message
+						: "Failed to reach verification endpoint.";
 			} finally {
 				loading = false;
 			}
@@ -47,7 +49,9 @@ onMount(async () => {
 			validationError = null;
 		} catch (error) {
 			validationError =
-				error instanceof Error ? error.message : 'Failed to reach verification endpoint.';
+				error instanceof Error
+					? error.message
+					: "Failed to reach verification endpoint.";
 		} finally {
 			loading = false;
 			tg.ready?.();
@@ -59,14 +63,14 @@ onMount(async () => {
 		| { authData: TelegramAuthPayload; initData?: never };
 
 	async function postForUser(payload: VerificationRequest) {
-		const response = await fetch('/api/telegram/verify-login', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify(payload)
+		const response = await fetch("/api/telegram/verify-login", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(payload),
 		});
 		const json = await response.json();
 		if (!response.ok || !json.ok) {
-			throw new Error(json.error ?? 'Unable to verify Telegram login.');
+			throw new Error(json.error ?? "Unable to verify Telegram login.");
 		}
 		return json.user;
 	}
@@ -79,11 +83,12 @@ onMount(async () => {
 
 		if (!telegramWebAppPromise) {
 			telegramWebAppPromise = new Promise((resolve, reject) => {
-				const script = document.createElement('script');
-				script.src = 'https://telegram.org/js/telegram-web-app.js';
+				const script = document.createElement("script");
+				script.src = "https://telegram.org/js/telegram-web-app.js";
 				script.async = true;
 				script.onload = () => resolve(window.Telegram?.WebApp ?? null);
-				script.onerror = () => reject(new Error('Failed to load Telegram Web App SDK'));
+				script.onerror = () =>
+					reject(new Error("Failed to load Telegram Web App SDK"));
 				document.head.appendChild(script);
 			});
 		}
@@ -100,7 +105,9 @@ onMount(async () => {
 	<section class="card">
 		<h1>Telegram profile viewer</h1>
 		{#if user}
-			<p class="muted">Signature verified. Here is what Telegram shared with us.</p>
+			<p class="muted">
+				Signature verified. Here is what Telegram shared with us.
+			</p>
 			<div class="profile">
 				{#if user.photo_url && !imageError}
 					<img
@@ -112,12 +119,13 @@ onMount(async () => {
 					/>
 				{:else}
 					<div class="avatar-fallback">
-						{user.first_name?.[0] ?? '?'}
+						{user.first_name?.[0] ?? "?"}
 					</div>
 				{/if}
 				<div>
 					<p class="name">
-						{user.first_name} {user.last_name}
+						{user.first_name}
+						{user.last_name}
 					</p>
 					{#if user.username}
 						<p class="username">@{user.username}</p>
@@ -127,8 +135,8 @@ onMount(async () => {
 			</div>
 		{:else}
 			<p class="muted">
-				Use the Telegram login widget below to prove your identity. We verify the signature on the
-				server before showing your profile.
+				Use the Telegram login widget below to prove your identity. We
+				verify the signature on the server before showing your profile.
 			</p>
 			{#if validationError}
 				<p class="error">{validationError}</p>
@@ -147,16 +155,21 @@ onMount(async () => {
 						async
 					></script>
 				</div>
-				<p class="muted">You may need to log in or switch to the Telegram app to complete auth.</p>
+				<p class="muted">
+					You may need to log in or switch to the Telegram app to
+					complete auth.
+				</p>
 			{:else}
-				<p class="error">Set PUBLIC_TELEGRAM_BOT_USERNAME to render the login widget.</p>
+				<p class="error">
+					Set PUBLIC_TELEGRAM_BOT_USERNAME to render the login widget.
+				</p>
 			{/if}
 		{/if}
 	</section>
 </main>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+	@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
 
 	.page {
 		display: flex;
@@ -164,9 +177,10 @@ onMount(async () => {
 		align-items: center;
 		min-height: 100vh;
 		padding: 2rem;
-		background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
+		background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
+			#050607;
 		color: #e8f1f5;
-		font-family: 'Space Grotesk', 'Manrope', 'Segoe UI', sans-serif;
+		font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
 	}
 
 	.card {
