@@ -2,6 +2,8 @@
 	import { onMount } from "svelte";
 	import type { PageData } from "./$types";
 
+	import { loadTelegramWebApp } from "$lib/telegram";
+
 	let { data }: { data: PageData } = $props();
 
 	let user = $state(data.user);
@@ -74,27 +76,6 @@
 			throw new Error(json.error ?? "Unable to verify Telegram login.");
 		}
 		return json.user;
-	}
-
-	let telegramWebAppPromise: Promise<TelegramWebApp | null> | null = null;
-	function loadTelegramWebApp(): Promise<TelegramWebApp | null> {
-		if (window.Telegram?.WebApp) {
-			return Promise.resolve(window.Telegram.WebApp);
-		}
-
-		if (!telegramWebAppPromise) {
-			telegramWebAppPromise = new Promise((resolve, reject) => {
-				const script = document.createElement("script");
-				script.src = "https://telegram.org/js/telegram-web-app.js";
-				script.async = true;
-				script.onload = () => resolve(window.Telegram?.WebApp ?? null);
-				script.onerror = () =>
-					reject(new Error("Failed to load Telegram Web App SDK"));
-				document.head.appendChild(script);
-			});
-		}
-
-		return telegramWebAppPromise;
 	}
 </script>
 
@@ -183,14 +164,14 @@
 		box-sizing: border-box;
 		background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
 			#050607;
-		color: #e8f1f5;
-		font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
+		color: var(--color-text-primary);
+		font-family: var(--font-body);
 	}
 
 	.card {
 		margin: auto;
-		background: rgba(12, 16, 20, 0.88);
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: var(--color-bg-card);
+		border: 1px solid var(--color-border);
 		border-radius: 18px;
 		padding: 2rem;
 		max-width: 720px;
@@ -220,7 +201,7 @@
 		height: 96px;
 		border-radius: 16px;
 		object-fit: cover;
-		border: 2px solid rgba(255, 255, 255, 0.08);
+		border: 2px solid var(--color-border);
 	}
 
 	.avatar-fallback {
@@ -228,7 +209,7 @@
 		height: 96px;
 		border-radius: 16px;
 		background: linear-gradient(145deg, #1d2f3c, #0f1820);
-		border: 2px solid rgba(255, 255, 255, 0.08);
+		border: 2px solid var(--color-border);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -245,7 +226,7 @@
 
 	.username {
 		margin: 0.2rem 0;
-		color: #7dd0ff;
+		color: var(--color-accent);
 	}
 
 	.widget {

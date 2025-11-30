@@ -7,32 +7,25 @@
 		<p class="eyebrow">Telegram bot scaffold</p>
 		<h1>Echo webhook + profile web app</h1>
 		<p class="lead">
-			Use the bot to echo your messages and open the /profile web page for Telegram authentication.
-			Deploy-ready for Railway.
+			Use the bot to echo your messages and open the /profile web page for
+			Telegram authentication. Deploy-ready for Railway.
 		</p>
 		<div class="actions">
 			<a class="button primary" href="/profile">Open profile page</a>
-			<a class="button ghost" href="https://core.telegram.org/bots/webapps" target="_blank"
-				>Docs: Telegram Web Apps</a
+			<a
+				class="button ghost"
+				href="https://core.telegram.org/bots/webapps"
+				target="_blank">Docs: Telegram Web Apps</a
 			>
 		</div>
 		<p class="note">
-			Configure environment variables and run the setup scripts in the README to register your webhook
-			and commands with Telegram.
+			Configure environment variables and run the setup scripts in the
+			README to register your webhook and commands with Telegram.
 		</p>
 	</section>
 </main>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap');
-
-	:global(body) {
-		margin: 0;
-		font-family: 'Space Grotesk', 'Manrope', 'Segoe UI', sans-serif;
-		background: radial-gradient(circle at 20% 20%, #0b1f2f, #05080d 40%), #05080d;
-		color: #e8f1f5;
-	}
-
 	.hero {
 		min-height: 100vh;
 		display: flex;
@@ -43,8 +36,8 @@
 
 	.panel {
 		max-width: 820px;
-		background: rgba(14, 22, 30, 0.75);
-		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: var(--color-bg-panel);
+		border: 1px solid var(--color-border);
 		border-radius: 24px;
 		padding: 2.25rem;
 		box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45);
@@ -61,11 +54,11 @@
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		font-size: 0.75rem;
-		color: #7dd0ff;
+		color: var(--color-accent);
 	}
 
 	.lead {
-		color: #a8b9c9;
+		color: var(--color-text-secondary);
 		font-size: 1.05rem;
 		margin: 0 0 1.5rem;
 	}
@@ -99,7 +92,7 @@
 	}
 
 	.note {
-		color: #7f93a8;
+		color: var(--color-text-muted);
 		margin: 0.5rem 0 0;
 	}
 
