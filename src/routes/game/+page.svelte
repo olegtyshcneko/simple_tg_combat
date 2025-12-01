@@ -56,6 +56,8 @@
             const isMobile = tg.platform === "ios" || tg.platform === "android";
             if (isMobile) {
                 tg.requestFullscreen?.();
+            } else {
+                tg.expand?.();
             }
             tg.disableVerticalSwipes?.();
             tg.ready?.();
