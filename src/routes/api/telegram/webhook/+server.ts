@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { sendMessage, type TelegramMessage, type TelegramUpdate } from '$lib/server/telegram';
@@ -37,11 +38,17 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 const PROFILE_PATH = '/profile';
-const GAME_PATH = '/game';
+const GAME_SHORT_NAME = 'game';
 
 function createPageUrl(path: string) {
 	if (!env.APP_BASE_URL) return null;
 	return `${env.APP_BASE_URL.replace(/\/+$/, '')}${path}`;
+}
+
+function createDirectLink(shortName: string) {
+	const botUsername = publicEnv.PUBLIC_TELEGRAM_BOT_USERNAME;
+	if (!botUsername) return null;
+	return `https://t.me/${botUsername}/${shortName}`;
 }
 
 async function handleMessage(message: TelegramMessage) {
@@ -60,25 +67,25 @@ async function handleMessage(message: TelegramMessage) {
 
 	if (text.startsWith('/profile')) {
 		const profileUrl = createPageUrl(PROFILE_PATH);
-		const gameUrl = createPageUrl(GAME_PATH);
+		const gameDirectLink = createDirectLink(GAME_SHORT_NAME);
 
-		const button =
-			profileUrl !== null && gameUrl !== null
-				? {
-					reply_markup: {
-						inline_keyboard: [
-							[
-								{ text: 'Open profile', web_app: { url: profileUrl } },
-								{ text: 'Play Game', web_app: { url: gameUrl } }
-							]
-						]
-					}
-				}
-				: undefined;
+		const buttons: Array<{ text: string; web_app?: { url: string }; url?: string }> = [];
+
+		if (profileUrl) {
+			buttons.push({ text: 'Open profile', web_app: { url: profileUrl } });
+		}
+		if (gameDirectLink) {
+			// Direct link opens fullscreen by default on desktop (Bot API 7.6+)
+			buttons.push({ text: 'Play Game', url: gameDirectLink });
+		}
+
+		const button = buttons.length > 0
+			? { reply_markup: { inline_keyboard: [buttons] } }
+			: undefined;
 
 		const hint = profileUrl
 			? 'Tap the button to open the login page or play the game.'
-			: 'Set APP_BASE_URL in your env to send the login link.';
+			: 'Set APP_BASE_URL and PUBLIC_TELEGRAM_BOT_USERNAME in your env.';
 
 		await sendMessage(chatId, `Profile web app\n${hint}`, {
 			disable_web_page_preview: true,
