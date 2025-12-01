@@ -63,7 +63,9 @@
         for (let r = 0; r < GRID_SIZE; r++) {
             const row: Cell[] = [];
             for (let c = 0; c < GRID_SIZE; c++) {
-                const config = PUZZLE_CONFIG.find((p) => p.r === r && p.c === c);
+                const config = PUZZLE_CONFIG.find(
+                    (p) => p.r === r && p.c === c,
+                );
                 row.push({
                     row: r,
                     col: c,
@@ -202,7 +204,10 @@
                                     use:draggable={{
                                         data: () => ({
                                             id: `cell-${r}-${c}`,
-                                            payload: { char: cell.current!, source: { r, c } },
+                                            payload: {
+                                                char: cell.current!,
+                                                source: { r, c },
+                                            },
                                         }),
                                         disabled: cell.isHint,
                                     }}
@@ -228,7 +233,10 @@
                         use:draggable={{
                             data: () => ({
                                 id: letter.id,
-                                payload: { char: letter.char, source: "bank" as const },
+                                payload: {
+                                    char: letter.char,
+                                    source: "bank" as const,
+                                },
                             }),
                         }}
                     >
@@ -239,7 +247,9 @@
         </div>
 
         <div class="controls">
-            <button class="btn-primary" onclick={checkSolution}>Check Solution</button>
+            <button class="btn-primary" onclick={checkSolution}
+                >Check Solution</button
+            >
             <button class="btn-secondary" onclick={resetGame}>Reset</button>
         </div>
 
@@ -259,13 +269,19 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: none;
-        padding-top: calc(1rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px));
-        padding-bottom: calc(1rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px));
+        padding-top: calc(
+            1rem + var(--tg-content-safe-area-inset-top, 0px) +
+                var(--tg-safe-area-inset-top, 0px)
+        );
+        padding-bottom: calc(
+            1rem + var(--tg-content-safe-area-inset-bottom, 0px) +
+                var(--tg-safe-area-inset-bottom, 0px)
+        );
         padding-left: calc(1rem + var(--tg-safe-area-inset-left, 0px));
         padding-right: calc(1rem + var(--tg-safe-area-inset-right, 0px));
         box-sizing: border-box;
-        background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
-            #050607;
+        background:
+            radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
         color: var(--color-text-primary);
         align-items: center;
     }
