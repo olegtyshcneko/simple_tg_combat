@@ -65,21 +65,24 @@
 
     onMount(async () => {
         const tg = await loadTelegramWebApp();
+        const isMobile = tg?.platform === "ios" || tg?.platform === "android";
+
+        // Consider desktop if: explicitly desktop/web, OR platform unknown and not mobile
+        isDesktop = tg?.platform === "web" || tg?.platform === "desktop" || (!isMobile && !tg?.platform);
+
         if (tg) {
-            const isMobile = tg.platform === "ios" || tg.platform === "android";
-            isDesktop = tg.platform === "web" || tg.platform === "desktop";
             if (isMobile) {
                 tg.requestFullscreen?.();
             }
             tg.expand?.();
             tg.disableVerticalSwipes?.();
             tg.ready?.();
+        }
 
-            // Check initial size and listen for resize on desktop/web
-            if (isDesktop) {
-                checkViewportSize();
-                window.addEventListener("resize", checkViewportSize);
-            }
+        // Check initial size and listen for resize on desktop/web
+        if (isDesktop) {
+            checkViewportSize();
+            window.addEventListener("resize", checkViewportSize);
         }
 
         // Initialize Grid

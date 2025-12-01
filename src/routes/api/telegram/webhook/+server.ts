@@ -67,25 +67,14 @@ async function handleMessage(message: TelegramMessage) {
 
 	if (text.startsWith('/profile')) {
 		const profileUrl = createPageUrl(PROFILE_PATH);
-		const gameDirectLink = createDirectLink(GAME_SHORT_NAME);
 
-		const buttons: Array<{ text: string; web_app?: { url: string }; url?: string }> = [];
-
-		if (profileUrl) {
-			buttons.push({ text: 'Open profile', web_app: { url: profileUrl } });
-		}
-		if (gameDirectLink) {
-			// Direct link opens fullscreen by default on desktop (Bot API 7.6+)
-			buttons.push({ text: 'Play Game', url: gameDirectLink });
-		}
-
-		const button = buttons.length > 0
-			? { reply_markup: { inline_keyboard: [buttons] } }
+		const button = profileUrl
+			? { reply_markup: { inline_keyboard: [[{ text: 'Open profile', web_app: { url: profileUrl } }]] } }
 			: undefined;
 
 		const hint = profileUrl
-			? 'Tap the button to open the login page or play the game.'
-			: 'Set APP_BASE_URL and PUBLIC_TELEGRAM_BOT_USERNAME in your env.';
+			? 'Tap the button to open the login page.'
+			: 'Set APP_BASE_URL in your env.';
 
 		await sendMessage(chatId, `Profile web app\n${hint}`, {
 			disable_web_page_preview: true,
