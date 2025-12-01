@@ -21,7 +21,11 @@
 				"Telegram Web App SDK unavailable. Use the login button below or open from Telegram.";
 			return;
 		}
-		tg.requestFullscreen?.();
+		const isMobile = tg.platform === "ios" || tg.platform === "android";
+		if (isMobile) {
+			tg.requestFullscreen?.();
+		}
+		tg.expand?.();
 		tg.disableVerticalSwipes?.();
 
 		const handleAuth = async (payload: TelegramAuthPayload) => {

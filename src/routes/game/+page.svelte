@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { loadTelegramWebApp } from "$lib/telegram";
     import { draggable, droppable, type DragData } from "$lib/actions/dnd";
 
@@ -49,17 +49,37 @@
     let grid: Cell[][] = $state([]);
     let bank: Letter[] = $state([]);
     let gameStatus: "playing" | "won" | "lost" = $state("playing");
+    let showResizeHint: boolean = $state(false);
+    let isDesktop: boolean = $state(false);
+
+    // Max game container needs ~340px width (6 cells * ~44px + gaps + padding) and ~520px height
+    const MIN_COMFORTABLE_WIDTH = 380;
+    const MIN_COMFORTABLE_HEIGHT = 520;
+
+    function checkViewportSize() {
+        if (!isDesktop) return;
+        const isComfortable = window.innerWidth >= MIN_COMFORTABLE_WIDTH &&
+                              window.innerHeight >= MIN_COMFORTABLE_HEIGHT;
+        showResizeHint = !isComfortable;
+    }
 
     onMount(async () => {
         const tg = await loadTelegramWebApp();
         if (tg) {
             const isMobile = tg.platform === "ios" || tg.platform === "android";
+            isDesktop = tg.platform === "web" || tg.platform === "desktop";
             if (isMobile) {
                 tg.requestFullscreen?.();
             }
             tg.expand?.();
             tg.disableVerticalSwipes?.();
             tg.ready?.();
+
+            // Check initial size and listen for resize on desktop/web
+            if (isDesktop) {
+                checkViewportSize();
+                window.addEventListener("resize", checkViewportSize);
+            }
         }
 
         // Initialize Grid
@@ -85,6 +105,12 @@
 
         // Initialize Bank
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
+    });
+
+    onDestroy(() => {
+        if (typeof window !== "undefined") {
+            window.removeEventListener("resize", checkViewportSize);
+        }
     });
 
     // Drop handlers
@@ -183,6 +209,9 @@
 </svelte:head>
 
 <main class="page">
+    {#if showResizeHint}
+        <p class="resize-hint">Resize window for better experience</p>
+    {/if}
     <section class="card game-card">
         <h1>Word Puzzle</h1>
 
@@ -472,6 +501,23 @@
     .victory-message h2 {
         font-size: 1.1rem;
         margin: 0;
+    }
+
+    .resize-hint {
+        margin: 0 0 0.5rem 0;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+        background: rgba(125, 208, 255, 0.15);
+        border: 1px solid rgba(125, 208, 255, 0.3);
+        border-radius: 6px;
+        text-align: center;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
     }
 
     @keyframes bounce {
