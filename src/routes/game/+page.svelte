@@ -212,10 +212,11 @@
 </svelte:head>
 
 <main class="page">
-    {#if showResizeHint}
-        <p class="resize-hint">Resize window for better experience</p>
-    {/if}
-    <section class="card game-card">
+    <div class="content-wrapper">
+        {#if showResizeHint}
+            <p class="resize-hint">Resize window for better experience</p>
+        {/if}
+        <section class="card game-card">
         <h1>Word Puzzle</h1>
 
         <div class="grid-container">
@@ -294,7 +295,8 @@
                 <h2>Puzzle Solved!</h2>
             </div>
         {/if}
-    </section>
+        </section>
+    </div>
 </main>
 
 <style>
@@ -321,7 +323,13 @@
             radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
         color: var(--color-text-primary);
         align-items: center;
-        justify-content: center;
+    }
+
+    .content-wrapper {
+        margin: auto 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .game-card {
