@@ -334,6 +334,13 @@
         border-color: #e74c3c;
     }
 
+    /* Highlight valid drop target on hover */
+    .cell:global([data-drag-over]) {
+        background: rgba(125, 208, 255, 0.3);
+        border-color: #7dd0ff;
+        box-shadow: 0 0 8px rgba(125, 208, 255, 0.5);
+    }
+
     .tile {
         width: 36px;
         height: 36px;
@@ -358,19 +365,24 @@
         background: #7dd0ff;
     }
 
+    /* Hide source tile while dragging */
+    .tile:global([data-dragging]) {
+        opacity: 0.3;
+    }
+
     :global(.ghost-tile) {
-        width: 36px;
-        height: 36px;
+        width: 48px;
+        height: 48px;
         background: #7dd0ff;
         color: #050607;
-        border-radius: 4px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        opacity: 0.9;
+        font-size: 1.5rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+        opacity: 0.95;
     }
 
     .bank-container {
