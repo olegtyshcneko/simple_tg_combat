@@ -37,10 +37,11 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 const PROFILE_PATH = '/profile';
+const GAME_PATH = '/game';
 
-function profileUrl() {
+function createPageUrl(path: string) {
 	if (!env.APP_BASE_URL) return null;
-	return `${env.APP_BASE_URL.replace(/\/+$/, '')}${PROFILE_PATH}`;
+	return `${env.APP_BASE_URL.replace(/\/+$/, '')}${path}`;
 }
 
 async function handleMessage(message: TelegramMessage) {
@@ -58,22 +59,25 @@ async function handleMessage(message: TelegramMessage) {
 	}
 
 	if (text.startsWith('/profile')) {
-		const url = profileUrl();
+		const profileUrl = createPageUrl(PROFILE_PATH);
+		const gameUrl = createPageUrl(GAME_PATH);
+
 		const button =
-			url !== null
+			profileUrl !== null && gameUrl !== null
 				? {
-						reply_markup: {
-							inline_keyboard: [
-								[
-									{ text: 'Open profile', web_app: { url } }
-								]
+					reply_markup: {
+						inline_keyboard: [
+							[
+								{ text: 'Open profile', web_app: { url: profileUrl } },
+								{ text: 'Play Game', web_app: { url: gameUrl } }
 							]
-						}
-				  }
+						]
+					}
+				}
 				: undefined;
 
-		const hint = url
-			? 'Tap the button to open the login page.'
+		const hint = profileUrl
+			? 'Tap the button to open the login page or play the game.'
 			: 'Set APP_BASE_URL in your env to send the login link.';
 
 		await sendMessage(chatId, `Profile web app\n${hint}`, {
