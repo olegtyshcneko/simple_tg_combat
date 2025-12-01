@@ -25,8 +25,8 @@ type DroppableOptions<T = unknown> = {
 // Shared drag state
 let currentDrag: DragData | null = null;
 let ghostElement: HTMLDivElement | null = null;
-let dragSourceNode: HTMLElement | null = null;
 let currentHoverTarget: Element | null = null;
+let draggingNode: HTMLElement | null = null; // Track which node is being dragged
 
 // Ghost offset: position above and slightly right of finger for visibility
 const GHOST_OFFSET_X = 10;
@@ -73,16 +73,29 @@ function updateHoverTarget(x: number, y: number) {
     const droppable = target?.closest("[data-droppable]");
 
     if (droppable !== currentHoverTarget) {
-        // Leave previous target
         if (currentHoverTarget) {
             currentHoverTarget.dispatchEvent(new CustomEvent("dnd:leave"));
         }
-        // Enter new target
         if (droppable && currentDrag) {
-            droppable.dispatchEvent(new CustomEvent("dnd:over", { detail: currentDrag }));
+            droppable.dispatchEvent(
+                new CustomEvent("dnd:over", { detail: currentDrag }),
+            );
         }
         currentHoverTarget = droppable || null;
     }
+}
+
+function cleanupDrag() {
+    if (currentHoverTarget) {
+        currentHoverTarget.dispatchEvent(new CustomEvent("dnd:leave"));
+        currentHoverTarget = null;
+    }
+    removeGhost();
+    if (draggingNode) {
+        draggingNode.removeAttribute("data-dragging");
+        draggingNode = null;
+    }
+    currentDrag = null;
 }
 
 /**
@@ -96,7 +109,7 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
 
         const data = currentOptions.data();
         currentDrag = { id: data.id, payload: data.payload };
-        dragSourceNode = node;
+        draggingNode = node;
         node.setAttribute("data-dragging", "true");
 
         if (e.dataTransfer) {
@@ -108,33 +121,39 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
     }
 
     function handleDragEnd() {
-        node.removeAttribute("data-dragging");
-        dragSourceNode = null;
-        currentDrag = null;
+        // Only process if this is the dragging node
+        if (draggingNode !== node) return;
+
+        cleanupDrag();
         currentOptions.onDragEnd?.();
     }
 
     function handleTouchStart(e: TouchEvent) {
         if (currentOptions.disabled) return;
+
+        // If another drag is in progress, ignore
+        if (currentDrag) return;
+
         e.preventDefault();
 
         const data = currentOptions.data();
         currentDrag = { id: data.id, payload: data.payload };
-        dragSourceNode = node;
+        draggingNode = node;
         node.setAttribute("data-dragging", "true");
 
         const touch = e.touches[0];
         ghostElement = createGhost(
             node.textContent || "",
             touch.clientX,
-            touch.clientY
+            touch.clientY,
         );
 
         currentOptions.onDragStart?.(currentDrag);
     }
 
     function handleTouchMove(e: TouchEvent) {
-        if (!currentDrag) return;
+        // Only the dragging node should handle move
+        if (draggingNode !== node || !currentDrag) return;
         e.preventDefault();
 
         const touch = e.touches[0];
@@ -143,7 +162,8 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
     }
 
     function handleTouchEnd(e: TouchEvent) {
-        if (!currentDrag) return;
+        // Only the dragging node should handle end
+        if (draggingNode !== node || !currentDrag) return;
 
         const touch = e.changedTouches[0];
         const dropTarget = findDropTarget(touch.clientX, touch.clientY);
@@ -151,24 +171,17 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
         if (dropTarget) {
             const droppable = dropTarget.closest("[data-droppable]");
             if (droppable) {
-                droppable.dispatchEvent(new CustomEvent("dnd:drop", {
-                    detail: currentDrag,
-                    bubbles: false,
-                }));
+                droppable.dispatchEvent(
+                    new CustomEvent("dnd:drop", {
+                        detail: currentDrag,
+                        bubbles: false,
+                    }),
+                );
             }
         }
 
-        // Clear hover state
-        if (currentHoverTarget) {
-            currentHoverTarget.dispatchEvent(new CustomEvent("dnd:leave"));
-            currentHoverTarget = null;
-        }
-
-        removeGhost();
-        node.removeAttribute("data-dragging");
-        dragSourceNode = null;
+        cleanupDrag();
         currentOptions.onDragEnd?.();
-        currentDrag = null;
     }
 
     // Set up listeners
@@ -188,7 +201,10 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
     return {
         update(newOptions: DraggableOptions<T>) {
             currentOptions = newOptions;
-            node.setAttribute("draggable", newOptions.disabled ? "false" : "true");
+            node.setAttribute(
+                "draggable",
+                newOptions.disabled ? "false" : "true",
+            );
         },
         destroy() {
             node.removeEventListener("dragstart", handleDragStart);
@@ -197,8 +213,11 @@ export function draggable<T>(node: HTMLElement, options: DraggableOptions<T>) {
             Doc.removeEventListener("touchmove", handleTouchMove);
             Doc.removeEventListener("touchend", handleTouchEnd);
             Doc.removeEventListener("touchcancel", handleTouchEnd);
-            removeGhost();
-            node.removeAttribute("data-dragging");
+
+            // Clean up if this node was being dragged when destroyed
+            if (draggingNode === node) {
+                cleanupDrag();
+            }
         },
     };
 }
@@ -235,7 +254,6 @@ export function droppable<T>(node: HTMLElement, options: DroppableOptions<T>) {
         }
     }
 
-    // Touch event handlers
     function handleTouchOver(e: CustomEvent<DragData>) {
         node.setAttribute("data-drag-over", "true");
         currentOptions.onDragOver?.(e.detail);
@@ -254,7 +272,6 @@ export function droppable<T>(node: HTMLElement, options: DroppableOptions<T>) {
         }
     }
 
-    // Mark as droppable for touch detection
     node.setAttribute("data-droppable", "true");
 
     node.addEventListener("dragover", handleDragOver);
@@ -274,9 +291,15 @@ export function droppable<T>(node: HTMLElement, options: DroppableOptions<T>) {
             node.removeEventListener("dragover", handleDragOver);
             node.removeEventListener("dragleave", handleDragLeave);
             node.removeEventListener("drop", handleDrop);
-            node.removeEventListener("dnd:over", handleTouchOver as EventListener);
+            node.removeEventListener(
+                "dnd:over",
+                handleTouchOver as EventListener,
+            );
             node.removeEventListener("dnd:leave", handleTouchLeave);
-            node.removeEventListener("dnd:drop", handleTouchDrop as EventListener);
+            node.removeEventListener(
+                "dnd:drop",
+                handleTouchDrop as EventListener,
+            );
         },
     };
 }
