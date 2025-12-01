@@ -15,6 +15,8 @@ declare global {
 		expand?: () => void;
 		requestFullscreen?: () => void;
 		disableVerticalSwipes?: () => void;
+		safeAreaInset?: { top: number; bottom: number; left: number; right: number };
+		contentSafeAreaInset?: { top: number; bottom: number; left: number; right: number };
 	}
 
 	interface TelegramAPI {

@@ -1,15 +1,16 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { loadTelegramWebApp } from "$lib/telegram";
+    import { draggable, droppable, type DragData } from "$lib/actions/dnd";
 
     // Game Data Types
     type Cell = {
         row: number;
         col: number;
-        letter: string | null; // The correct letter
-        current: string | null; // The letter placed by the user
-        isHint: boolean; // If true, pre-filled
-        status?: "correct" | "wrong" | "neutral"; // For validation feedback
+        letter: string | null;
+        current: string | null;
+        isHint: boolean;
+        status?: "correct" | "wrong" | "neutral";
     };
 
     type Letter = {
@@ -17,17 +18,12 @@
         char: string;
     };
 
-    // Hardcoded Puzzle Data (from concept)
-    // Grid 6x6
-    // Words: GAME (0,0-3), APPLE (0,1 vertical), CAT (2,1-3), COW (2,3 vertical), TREE (2,5 vertical)
-    // 0 1 2 3 4 5
-    // 0 G A M E . .
-    // 1 . P . . . .
-    // 2 . P . C A T
-    // 3 . L . O . R
-    // 4 . E . W . E
-    // 5 . . . . . E
+    type DragPayload = {
+        char: string;
+        source: "bank" | { r: number; c: number };
+    };
 
+    // Puzzle configuration
     const GRID_SIZE = 6;
     const PUZZLE_CONFIG = [
         { r: 0, c: 0, l: "G", hint: true },
@@ -48,18 +44,13 @@
         { r: 5, c: 5, l: "E", hint: false },
     ];
 
-    // Initial Bank Letters (shuffled in a real scenario, but hardcoded for now)
-    // Needed: P, P, L, E, O, W, R, E, E
     const INITIAL_BANK = ["P", "P", "L", "E", "O", "W", "R", "E", "E"];
 
     let grid: Cell[][] = $state([]);
     let bank: Letter[] = $state([]);
-    let draggingLetter: Letter | null = $state(null);
-    let draggingFrom: "bank" | { r: number; c: number } | null = $state(null);
     let gameStatus: "playing" | "won" | "lost" = $state("playing");
 
     onMount(async () => {
-        // Initialize Telegram WebApp
         const tg = await loadTelegramWebApp();
         if (tg) {
             tg.requestFullscreen?.();
@@ -72,9 +63,7 @@
         for (let r = 0; r < GRID_SIZE; r++) {
             const row: Cell[] = [];
             for (let c = 0; c < GRID_SIZE; c++) {
-                const config = PUZZLE_CONFIG.find(
-                    (p) => p.r === r && p.c === c,
-                );
+                const config = PUZZLE_CONFIG.find((p) => p.r === r && p.c === c);
                 row.push({
                     row: r,
                     col: c,
@@ -92,35 +81,14 @@
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
     });
 
-    function handleDragStart(
-        e: DragEvent | TouchEvent,
-        letter: Letter,
-        source: "bank" | { r: number; c: number },
-    ) {
-        draggingLetter = letter;
-        draggingFrom = source;
-        // For HTML5 DnD
-        if (e instanceof DragEvent && e.dataTransfer) {
-            e.dataTransfer.setData("text/plain", JSON.stringify(letter));
-            e.dataTransfer.effectAllowed = "move";
-        }
-    }
-
-    function handleDragOver(e: DragEvent) {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = "move";
-        }
-    }
-
-    function handleDropOnCell(e: DragEvent, r: number, c: number) {
-        e.preventDefault();
-        if (!draggingLetter || !draggingFrom) return;
-
+    // Drop handlers
+    function handleDropOnCell(data: DragData, r: number, c: number) {
+        const payload = data.payload as DragPayload;
         const targetCell = grid[r][c];
-        if (targetCell.isHint || targetCell.letter === null) return; // Can't drop on hints or empty space
 
-        // If cell is occupied, move the existing letter back to bank (simple swap logic for now)
+        if (targetCell.isHint || targetCell.letter === null) return;
+
+        // Return existing letter to bank
         if (targetCell.current) {
             bank.push({
                 id: `returned-${Date.now()}`,
@@ -128,38 +96,34 @@
             });
         }
 
-        // Place letter
-        targetCell.current = draggingLetter.char;
-        targetCell.status = "neutral"; // Reset status on change
+        // Place new letter
+        targetCell.current = payload.char;
+        targetCell.status = "neutral";
 
         // Remove from source
-        if (draggingFrom === "bank") {
-            bank = bank.filter((l) => l.id !== draggingLetter!.id);
+        if (payload.source === "bank") {
+            bank = bank.filter((l) => l.id !== data.id);
         } else {
-            // If dragged from another cell, clear that cell
-            const sourceCell = grid[draggingFrom.r][draggingFrom.c];
+            const sourceCell = grid[payload.source.r][payload.source.c];
             sourceCell.current = null;
             sourceCell.status = "neutral";
         }
-
-        draggingLetter = null;
-        draggingFrom = null;
     }
 
-    function handleDropOnBank(e: DragEvent) {
-        e.preventDefault();
-        if (!draggingLetter || !draggingFrom) return;
+    function handleDropOnBank(data: DragData) {
+        const payload = data.payload as DragPayload;
 
-        if (draggingFrom !== "bank") {
-            // Return to bank
-            bank.push(draggingLetter);
-            const sourceCell = grid[draggingFrom.r][draggingFrom.c];
+        if (payload.source !== "bank") {
+            bank.push({ id: data.id, char: payload.char });
+            const sourceCell = grid[payload.source.r][payload.source.c];
             sourceCell.current = null;
             sourceCell.status = "neutral";
         }
+    }
 
-        draggingLetter = null;
-        draggingFrom = null;
+    function canDropOnCell(r: number, c: number) {
+        const cell = grid[r]?.[c];
+        return cell && !cell.isHint && cell.letter !== null;
     }
 
     function checkSolution() {
@@ -183,6 +147,8 @@
             }
         }
 
+        grid = [...grid];
+
         if (allCorrect && allFilled) {
             gameStatus = "won";
         } else {
@@ -191,7 +157,6 @@
     }
 
     function resetGame() {
-        // Reset grid user inputs
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 const cell = grid[r][c];
@@ -201,7 +166,7 @@
                 }
             }
         }
-        // Reset bank
+        grid = [...grid];
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
         gameStatus = "playing";
     }
@@ -219,31 +184,28 @@
             {#each grid as row, r}
                 <div class="row">
                     {#each row as cell, c}
-                        <!-- svelte-ignore a11y_no_static_element_interactions -->
                         <div
                             class="cell"
                             class:empty={cell.letter === null}
                             class:hint={cell.isHint}
                             class:correct={cell.status === "correct"}
                             class:wrong={cell.status === "wrong"}
-                            ondragover={handleDragOver}
-                            ondrop={(e) => handleDropOnCell(e, r, c)}
+                            use:droppable={{
+                                onDrop: (data) => handleDropOnCell(data, r, c),
+                                canDrop: () => canDropOnCell(r, c),
+                            }}
                         >
                             {#if cell.current}
                                 <div
                                     class="tile"
                                     class:draggable={!cell.isHint}
-                                    draggable={!cell.isHint}
-                                    ondragstart={(e) =>
-                                        !cell.isHint &&
-                                        handleDragStart(
-                                            e,
-                                            {
-                                                id: `cell-${r}-${c}`,
-                                                char: cell.current,
-                                            },
-                                            { r, c },
-                                        )}
+                                    use:draggable={{
+                                        data: () => ({
+                                            id: `cell-${r}-${c}`,
+                                            payload: { char: cell.current!, source: { r, c } },
+                                        }),
+                                        disabled: cell.isHint,
+                                    }}
                                 >
                                     {cell.current}
                                 </div>
@@ -254,19 +216,21 @@
             {/each}
         </div>
 
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="bank-container"
-            ondragover={handleDragOver}
-            ondrop={handleDropOnBank}
+            use:droppable={{ onDrop: handleDropOnBank }}
         >
             <p class="muted">Drag letters to the grid</p>
             <div class="bank">
                 {#each bank as letter (letter.id)}
                     <div
                         class="tile bank-tile"
-                        draggable="true"
-                        ondragstart={(e) => handleDragStart(e, letter, "bank")}
+                        use:draggable={{
+                            data: () => ({
+                                id: letter.id,
+                                payload: { char: letter.char, source: "bank" as const },
+                            }),
+                        }}
                     >
                         {letter.char}
                     </div>
@@ -275,15 +239,13 @@
         </div>
 
         <div class="controls">
-            <button class="btn-primary" onclick={checkSolution}
-                >Check Solution</button
-            >
+            <button class="btn-primary" onclick={checkSolution}>Check Solution</button>
             <button class="btn-secondary" onclick={resetGame}>Reset</button>
         </div>
 
         {#if gameStatus === "won"}
             <div class="victory-message">
-                <h2>🎉 Puzzle Solved! 🎉</h2>
+                <h2>Puzzle Solved!</h2>
             </div>
         {/if}
     </section>
@@ -297,7 +259,10 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: none;
-        padding: 1rem;
+        padding-top: calc(1rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px));
+        padding-bottom: calc(1rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px));
+        padding-left: calc(1rem + var(--tg-safe-area-inset-left, 0px));
+        padding-right: calc(1rem + var(--tg-safe-area-inset-right, 0px));
         box-sizing: border-box;
         background: radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%),
             #050607;
@@ -391,6 +356,21 @@
 
     .tile.draggable {
         background: #7dd0ff;
+    }
+
+    :global(.ghost-tile) {
+        width: 36px;
+        height: 36px;
+        background: #7dd0ff;
+        color: #050607;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        opacity: 0.9;
     }
 
     .bank-container {
