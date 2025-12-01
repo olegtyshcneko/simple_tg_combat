@@ -56,9 +56,8 @@
             const isMobile = tg.platform === "ios" || tg.platform === "android";
             if (isMobile) {
                 tg.requestFullscreen?.();
-            } else {
-                tg.expand?.();
             }
+            tg.expand?.();
             tg.disableVerticalSwipes?.();
             tg.ready?.();
         }
@@ -270,20 +269,15 @@
     .page {
         display: flex;
         flex-direction: column;
-        height: 100%;
+        height: var(--tg-viewport-stable-height, 100vh);
+        min-height: var(--tg-viewport-stable-height, 100vh);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: none;
-        padding-top: calc(
-            1rem + var(--tg-content-safe-area-inset-top, 0px) +
-                var(--tg-safe-area-inset-top, 0px)
-        );
-        padding-bottom: calc(
-            1rem + var(--tg-content-safe-area-inset-bottom, 0px) +
-                var(--tg-safe-area-inset-bottom, 0px)
-        );
-        padding-left: calc(1rem + var(--tg-safe-area-inset-left, 0px));
-        padding-right: calc(1rem + var(--tg-safe-area-inset-right, 0px));
+        padding: calc(0.5rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px))
+                 calc(0.5rem + var(--tg-safe-area-inset-right, 0px))
+                 calc(0.5rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px))
+                 calc(0.5rem + var(--tg-safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
             radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
@@ -295,40 +289,40 @@
     .game-card {
         background: var(--color-bg-card);
         border: 1px solid var(--color-border);
-        border-radius: 18px;
-        padding: 1.5rem;
+        border-radius: 12px;
+        padding: 0.75rem;
         max-width: 500px;
         width: 100%;
         box-shadow: 0 22px 50px rgba(0, 0, 0, 0.4);
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1.5rem;
+        gap: 0.75rem;
     }
 
     h1 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 1.1rem;
         text-align: center;
     }
 
     .grid-container {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
         background: rgba(0, 0, 0, 0.2);
-        padding: 8px;
-        border-radius: 8px;
+        padding: 6px;
+        border-radius: 6px;
     }
 
     .row {
         display: flex;
-        gap: 4px;
+        gap: 3px;
     }
 
     .cell {
-        width: 40px;
-        height: 40px;
+        width: clamp(32px, 8vw, 44px);
+        height: clamp(32px, 8vw, 44px);
         background: rgba(255, 255, 255, 0.05);
         border-radius: 4px;
         display: flex;
@@ -364,8 +358,8 @@
     }
 
     .tile {
-        width: 36px;
-        height: 36px;
+        width: clamp(28px, 7vw, 40px);
+        height: clamp(28px, 7vw, 40px);
         background: #e8f1f5;
         color: #050607;
         border-radius: 4px;
@@ -373,7 +367,7 @@
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1.2rem;
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
         cursor: grab;
         user-select: none;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -393,8 +387,8 @@
     }
 
     :global(.ghost-tile) {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         background: #7dd0ff;
         color: #050607;
         border-radius: 6px;
@@ -402,27 +396,27 @@
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
         opacity: 0.95;
     }
 
     .bank-container {
         width: 100%;
-        min-height: 80px;
+        min-height: 60px;
         background: rgba(0, 0, 0, 0.2);
-        border-radius: 12px;
-        padding: 1rem;
+        border-radius: 8px;
+        padding: 0.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.35rem;
     }
 
     .bank {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         justify-content: center;
     }
 
@@ -432,23 +426,23 @@
 
     .muted {
         margin: 0;
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         color: var(--color-text-muted);
     }
 
     .controls {
         display: flex;
-        gap: 1rem;
+        gap: 0.5rem;
         width: 100%;
     }
 
     button {
         flex: 1;
-        padding: 0.8rem;
-        border-radius: 12px;
+        padding: 0.6rem;
+        border-radius: 8px;
         border: none;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.85rem;
         cursor: pointer;
         transition:
             transform 0.1s,
@@ -475,12 +469,74 @@
         animation: bounce 0.5s infinite alternate;
     }
 
+    .victory-message h2 {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
     @keyframes bounce {
         from {
             transform: translateY(0);
         }
         to {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
+        }
+    }
+
+    /* Larger screens - restore bigger sizes */
+    @media (min-width: 400px) and (min-height: 600px) {
+        .page {
+            padding: calc(1rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px))
+                     calc(1rem + var(--tg-safe-area-inset-right, 0px))
+                     calc(1rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px))
+                     calc(1rem + var(--tg-safe-area-inset-left, 0px));
+        }
+
+        .game-card {
+            padding: 1.25rem;
+            gap: 1.25rem;
+            border-radius: 18px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+
+        .grid-container {
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .row {
+            gap: 4px;
+        }
+
+        .bank-container {
+            min-height: 80px;
+            padding: 1rem;
+            gap: 0.5rem;
+        }
+
+        .bank {
+            gap: 8px;
+        }
+
+        .muted {
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            gap: 1rem;
+        }
+
+        button {
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: 12px;
+        }
+
+        .victory-message h2 {
+            font-size: 1.5rem;
         }
     }
 </style>
