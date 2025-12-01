@@ -63,29 +63,7 @@
         showResizeHint = !isComfortable;
     }
 
-    onMount(async () => {
-        const tg = await loadTelegramWebApp();
-        const isMobile = tg?.platform === "ios" || tg?.platform === "android";
-
-        // Consider desktop if: explicitly desktop/web, OR platform unknown and not mobile
-        isDesktop = tg?.platform === "web" || tg?.platform === "desktop" || (!isMobile && !tg?.platform);
-
-        if (tg) {
-            if (isMobile) {
-                tg.requestFullscreen?.();
-            }
-            tg.expand?.();
-            tg.disableVerticalSwipes?.();
-            tg.ready?.();
-        }
-
-        // Check initial size and listen for resize on desktop/web
-        if (isDesktop) {
-            checkViewportSize();
-            window.addEventListener("resize", checkViewportSize);
-        }
-
-        // Initialize Grid
+    function initializeGame() {
         const newGrid: Cell[][] = [];
         for (let r = 0; r < GRID_SIZE; r++) {
             const row: Cell[] = [];
@@ -105,9 +83,32 @@
             newGrid.push(row);
         }
         grid = newGrid;
-
-        // Initialize Bank
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
+    }
+
+    onMount(async () => {
+        const tg = await loadTelegramWebApp();
+        const isMobile = tg?.platform === "ios" || tg?.platform === "android";
+
+        // If not mobile, it's desktop/web
+        isDesktop = !isMobile;
+
+        if (tg) {
+            if (isMobile) {
+                tg.requestFullscreen?.();
+            }
+            tg.expand?.();
+            tg.disableVerticalSwipes?.();
+            tg.ready?.();
+        }
+
+        // Check initial size and listen for resize on desktop/web
+        if (isDesktop) {
+            checkViewportSize();
+            window.addEventListener("resize", checkViewportSize);
+        }
+
+        initializeGame();
     });
 
     onDestroy(() => {
