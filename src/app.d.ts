@@ -11,6 +11,7 @@ declare global {
 
 	interface TelegramWebApp {
 		initData?: string;
+		platform?: "ios" | "android" | "desktop" | "web";
 		ready?: () => void;
 		expand?: () => void;
 		requestFullscreen?: () => void;

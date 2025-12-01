@@ -53,7 +53,10 @@
     onMount(async () => {
         const tg = await loadTelegramWebApp();
         if (tg) {
-            tg.requestFullscreen?.();
+            const isMobile = tg.platform === "ios" || tg.platform === "android";
+            if (isMobile) {
+                tg.requestFullscreen?.();
+            }
             tg.disableVerticalSwipes?.();
             tg.ready?.();
         }
@@ -284,6 +287,7 @@
             radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
         color: var(--color-text-primary);
         align-items: center;
+        justify-content: center;
     }
 
     .game-card {
