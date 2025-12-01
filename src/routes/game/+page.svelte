@@ -50,16 +50,16 @@
     let bank: Letter[] = $state([]);
     let gameStatus: "playing" | "won" | "lost" = $state("playing");
     let showResizeHint: boolean = $state(false);
-    let isDesktop: boolean = $state(false);
 
     // Max game container needs ~340px width (6 cells * ~44px + gaps + padding) and ~520px height
     const MIN_COMFORTABLE_WIDTH = 380;
     const MIN_COMFORTABLE_HEIGHT = 520;
 
     function checkViewportSize() {
-        if (!isDesktop) return;
-        const isComfortable = window.innerWidth >= MIN_COMFORTABLE_WIDTH &&
-                              window.innerHeight >= MIN_COMFORTABLE_HEIGHT;
+        // Note: This function is only called/registered when isDesktop is true
+        const isComfortable =
+            window.innerWidth >= MIN_COMFORTABLE_WIDTH &&
+            window.innerHeight >= MIN_COMFORTABLE_HEIGHT;
         showResizeHint = !isComfortable;
     }
 
@@ -86,12 +86,11 @@
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
     }
 
+    let removeResizeListener: (() => void) | null = null;
+
     onMount(async () => {
         const tg = await loadTelegramWebApp();
         const isMobile = tg?.platform === "ios" || tg?.platform === "android";
-
-        // If not mobile, it's desktop/web
-        isDesktop = !isMobile;
 
         if (tg) {
             if (isMobile) {
@@ -103,18 +102,18 @@
         }
 
         // Check initial size and listen for resize on desktop/web
-        if (isDesktop) {
+        if (!isMobile) {
             checkViewportSize();
             window.addEventListener("resize", checkViewportSize);
+            removeResizeListener = () =>
+                window.removeEventListener("resize", checkViewportSize);
         }
 
         initializeGame();
     });
 
     onDestroy(() => {
-        if (typeof window !== "undefined") {
-            window.removeEventListener("resize", checkViewportSize);
-        }
+        removeResizeListener?.();
     });
 
     // Drop handlers
@@ -307,10 +306,16 @@
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-y: none;
-        padding: calc(0.5rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px))
-                 calc(0.5rem + var(--tg-safe-area-inset-right, 0px))
-                 calc(0.5rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px))
-                 calc(0.5rem + var(--tg-safe-area-inset-left, 0px));
+        padding: calc(
+                0.5rem + var(--tg-content-safe-area-inset-top, 0px) +
+                    var(--tg-safe-area-inset-top, 0px)
+            )
+            calc(0.5rem + var(--tg-safe-area-inset-right, 0px))
+            calc(
+                0.5rem + var(--tg-content-safe-area-inset-bottom, 0px) +
+                    var(--tg-safe-area-inset-bottom, 0px)
+            )
+            calc(0.5rem + var(--tg-safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
             radial-gradient(circle at 10% 20%, #1b2a33, #0c1014 35%), #050607;
@@ -520,8 +525,13 @@
     }
 
     @keyframes pulse {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
+        0%,
+        100% {
+            opacity: 0.7;
+        }
+        50% {
+            opacity: 1;
+        }
     }
 
     @keyframes bounce {
@@ -536,10 +546,16 @@
     /* Larger screens - restore bigger sizes */
     @media (min-width: 400px) and (min-height: 600px) {
         .page {
-            padding: calc(1rem + var(--tg-content-safe-area-inset-top, 0px) + var(--tg-safe-area-inset-top, 0px))
-                     calc(1rem + var(--tg-safe-area-inset-right, 0px))
-                     calc(1rem + var(--tg-content-safe-area-inset-bottom, 0px) + var(--tg-safe-area-inset-bottom, 0px))
-                     calc(1rem + var(--tg-safe-area-inset-left, 0px));
+            padding: calc(
+                    1rem + var(--tg-content-safe-area-inset-top, 0px) +
+                        var(--tg-safe-area-inset-top, 0px)
+                )
+                calc(1rem + var(--tg-safe-area-inset-right, 0px))
+                calc(
+                    1rem + var(--tg-content-safe-area-inset-bottom, 0px) +
+                        var(--tg-safe-area-inset-bottom, 0px)
+                )
+                calc(1rem + var(--tg-safe-area-inset-left, 0px));
         }
 
         .game-card {
