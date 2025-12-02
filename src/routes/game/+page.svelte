@@ -92,6 +92,12 @@
         const tg = await loadTelegramWebApp();
         const isMobile = tg?.platform === "ios" || tg?.platform === "android";
 
+        // DEBUG
+        console.log("DEBUG: tg =", tg);
+        console.log("DEBUG: platform =", tg?.platform);
+        console.log("DEBUG: isMobile =", isMobile);
+        console.log("DEBUG: viewport =", window.innerWidth, "x", window.innerHeight);
+
         if (tg) {
             if (isMobile) {
                 tg.requestFullscreen?.();
@@ -103,7 +109,9 @@
 
         // Check initial size and listen for resize on desktop/web
         if (!isMobile) {
+            console.log("DEBUG: calling checkViewportSize");
             checkViewportSize();
+            console.log("DEBUG: showResizeHint =", showResizeHint);
             window.addEventListener("resize", checkViewportSize);
             removeResizeListener = () =>
                 window.removeEventListener("resize", checkViewportSize);
