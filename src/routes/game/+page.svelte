@@ -54,9 +54,6 @@
     // Reference to game card element for ResizeObserver
     let gameCardEl: HTMLElement;
 
-    // Ideal size for game card (max-width from CSS)
-    const IDEAL_CARD_WIDTH = 500;
-
     function initializeGame() {
         const newGrid: Cell[][] = [];
         for (let r = 0; r < GRID_SIZE; r++) {
@@ -100,14 +97,16 @@
 
         // Watch game card size on desktop/web
         if (!isMobile) {
-            resizeObserver = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    const cardWidth = entry.contentRect.width;
-                    const cardHeight = entry.contentRect.height;
-                    console.log(`DEBUG: card size = ${cardWidth.toFixed(0)} x ${cardHeight.toFixed(0)}, ideal = ${IDEAL_CARD_WIDTH}, showHint = ${cardWidth < IDEAL_CARD_WIDTH}`);
-                    // Show hint if card can't reach its ideal width
-                    showResizeHint = cardWidth < IDEAL_CARD_WIDTH;
-                }
+            resizeObserver = new ResizeObserver(() => {
+                // Get CSS max-width and actual rendered width (both include padding with border-box)
+                const maxWidth = parseFloat(getComputedStyle(gameCardEl).maxWidth);
+                const currentWidth = gameCardEl.offsetWidth;
+
+                // If card is smaller than its CSS max-width, it's being constrained
+                const isConstrained = !isNaN(maxWidth) && currentWidth < maxWidth - 1;
+
+                console.log(`DEBUG: currentWidth=${currentWidth}, maxWidth=${maxWidth}, isConstrained=${isConstrained}`);
+                showResizeHint = isConstrained;
             });
             resizeObserver.observe(gameCardEl);
         }
