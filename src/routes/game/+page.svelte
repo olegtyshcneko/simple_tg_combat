@@ -98,15 +98,9 @@
         // Watch game card size on desktop/web
         if (!isMobile) {
             resizeObserver = new ResizeObserver(() => {
-                // Get CSS max-width and actual rendered width (both include padding with border-box)
                 const maxWidth = parseFloat(getComputedStyle(gameCardEl).maxWidth);
                 const currentWidth = gameCardEl.offsetWidth;
-
-                // If card is smaller than its CSS max-width, it's being constrained
-                const isConstrained = !isNaN(maxWidth) && currentWidth < maxWidth - 1;
-
-                console.log(`DEBUG: currentWidth=${currentWidth}, maxWidth=${maxWidth}, isConstrained=${isConstrained}`);
-                showResizeHint = isConstrained;
+                showResizeHint = !isNaN(maxWidth) && currentWidth < maxWidth - 1;
             });
             resizeObserver.observe(gameCardEl);
         }
