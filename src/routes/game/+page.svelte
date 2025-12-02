@@ -51,17 +51,11 @@
     let gameStatus: "playing" | "won" | "lost" = $state("playing");
     let showResizeHint: boolean = $state(false);
 
-    // Max game container needs ~340px width (6 cells * ~44px + gaps + padding) and ~520px height
-    const MIN_COMFORTABLE_WIDTH = 380;
-    const MIN_COMFORTABLE_HEIGHT = 520;
+    // Reference to game card element for ResizeObserver
+    let gameCardEl: HTMLElement;
 
-    function checkViewportSize() {
-        // Note: This function is only called/registered when isDesktop is true
-        const isComfortable =
-            window.innerWidth >= MIN_COMFORTABLE_WIDTH &&
-            window.innerHeight >= MIN_COMFORTABLE_HEIGHT;
-        showResizeHint = !isComfortable;
-    }
+    // Ideal size for game card (max-width from CSS)
+    const IDEAL_CARD_WIDTH = 500;
 
     function initializeGame() {
         const newGrid: Cell[][] = [];
@@ -86,42 +80,41 @@
         bank = INITIAL_BANK.map((char, i) => ({ id: `bank-${i}`, char }));
     }
 
-    let removeResizeListener: (() => void) | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
     onMount(async () => {
         const tg = await loadTelegramWebApp();
         const isMobile = tg?.platform === "ios" || tg?.platform === "android";
-
-        // DEBUG
-        console.log("DEBUG: tg =", tg);
-        console.log("DEBUG: platform =", tg?.platform);
-        console.log("DEBUG: isMobile =", isMobile);
-        console.log("DEBUG: viewport =", window.innerWidth, "x", window.innerHeight);
 
         if (tg) {
             if (isMobile) {
                 tg.requestFullscreen?.();
             }
             tg.expand?.();
-            tg.disableVerticalSwipes?.();
+            // disableVerticalSwipes requires WebApp version 6.7+
+            if (tg.version && parseFloat(tg.version) >= 6.7) {
+                tg.disableVerticalSwipes?.();
+            }
             tg.ready?.();
         }
 
-        // Check initial size and listen for resize on desktop/web
+        // Watch game card size on desktop/web
         if (!isMobile) {
-            console.log("DEBUG: calling checkViewportSize");
-            checkViewportSize();
-            console.log("DEBUG: showResizeHint =", showResizeHint);
-            window.addEventListener("resize", checkViewportSize);
-            removeResizeListener = () =>
-                window.removeEventListener("resize", checkViewportSize);
+            resizeObserver = new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                    const cardWidth = entry.contentRect.width;
+                    // Show hint if card can't reach its ideal width
+                    showResizeHint = cardWidth < IDEAL_CARD_WIDTH;
+                }
+            });
+            resizeObserver.observe(gameCardEl);
         }
 
         initializeGame();
     });
 
     onDestroy(() => {
-        removeResizeListener?.();
+        resizeObserver?.disconnect();
     });
 
     // Drop handlers
@@ -221,8 +214,10 @@
 
 <main class="page">
     <div class="content-wrapper">
-        <p class="resize-hint">Resize window for better experience</p>
-        <section class="card game-card">
+        {#if showResizeHint}
+            <p class="resize-hint">Resize window for better experience</p>
+        {/if}
+        <section bind:this={gameCardEl} class="card game-card">
         <h1>Word Puzzle</h1>
 
         <div class="grid-container">
