@@ -213,9 +213,7 @@
 
 <main class="page">
     <div class="content-wrapper">
-        {#if showResizeHint}
-            <p class="resize-hint">Resize window for better experience</p>
-        {/if}
+        <p class="resize-hint">Resize window for better experience</p>
         <section class="card game-card">
         <h1>Word Puzzle</h1>
 
