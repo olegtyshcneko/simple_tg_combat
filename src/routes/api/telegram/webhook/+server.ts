@@ -1,5 +1,4 @@
 import { env } from '$env/dynamic/private';
-import { env as publicEnv } from '$env/dynamic/public';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { sendMessage, type TelegramMessage, type TelegramUpdate } from '$lib/server/telegram';
@@ -38,17 +37,10 @@ export const POST: RequestHandler = async ({ request }) => {
 };
 
 const PROFILE_PATH = '/profile';
-const GAME_SHORT_NAME = 'game';
 
 function createPageUrl(path: string) {
 	if (!env.APP_BASE_URL) return null;
 	return `${env.APP_BASE_URL.replace(/\/+$/, '')}${path}`;
-}
-
-function createDirectLink(shortName: string) {
-	const botUsername = publicEnv.PUBLIC_TELEGRAM_BOT_USERNAME;
-	if (!botUsername) return null;
-	return `https://t.me/${botUsername}/${shortName}`;
 }
 
 async function handleMessage(message: TelegramMessage) {

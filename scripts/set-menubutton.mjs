@@ -14,7 +14,7 @@ if (!appUrl) {
 	process.exit(1);
 }
 
-const gameUrl = `${appUrl.replace(/\/+$/, '')}/game`;
+const profileUrl = `${appUrl.replace(/\/+$/, '')}/profile`;
 
 async function main() {
 	// Set default menu button for all users
@@ -24,8 +24,8 @@ async function main() {
 		body: JSON.stringify({
 			menu_button: {
 				type: 'web_app',
-				text: 'Play Game',
-				web_app: { url: gameUrl }
+				text: 'Profile',
+				web_app: { url: profileUrl }
 			}
 		})
 	});
@@ -37,14 +37,7 @@ async function main() {
 	}
 
 	console.log('Menu button set successfully:', data);
-	console.log(`Game URL: ${gameUrl}`);
-	console.log('\nNote: Menu button opens in smaller window.');
-	console.log('For fullscreen on desktop, configure Direct Link Mini App in BotFather:');
-	console.log('  1. Send /newapp to @BotFather');
-	console.log('  2. Select your bot');
-	console.log('  3. Set Web App URL:', gameUrl);
-	console.log('  4. Set short name: game');
-	console.log('  5. Then users can open via t.me/YOUR_BOT/game (opens fullscreen)');
+	console.log(`Profile URL: ${profileUrl}`);
 }
 
 main().catch((error) => {
